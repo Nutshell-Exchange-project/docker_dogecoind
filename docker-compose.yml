@@ -15,6 +15,7 @@ services:
        - "-regtest=0"
        - "-rest"
        - "-rpcallowip=0/32"
+       - "rpcallowip=172.17.0.0/16"
        - "-rpcpassword=test"
        - "-wallet=wallet1"
        - "-rpcport=8333"
