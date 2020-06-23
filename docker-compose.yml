@@ -1,0 +1,22 @@
+version: '3.6'
+
+services:
+  dogecoin:
+    restart: always
+    image: realnuts/docker_dogecoind:v1.1.14.2
+    ports:
+      - "22555:22555"
+      - "22556:22556"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/doge_data:/dogecoin/data
+    command:
+       - "-printtoconsole"
+       - "-regtest=0"
+       - "-rest"
+       - "-rpcallowip=0/32"
+       - "-rpcpassword=test"
+       - "-wallet=wallet1"
+       - "-rpcport=8333"
+       - "-rpcuser=foo"
+       - "-server"
