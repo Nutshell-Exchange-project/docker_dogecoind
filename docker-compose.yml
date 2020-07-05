@@ -3,10 +3,10 @@ version: '3.6'
 services:
   dogecoin:
     restart: always
-    image: realnuts/docker_dogecoind:v1.1.14.3
+    image: realnuts/docker_dogecoind:v2.1.14.2
     ports:
       - "8332:8332"
-      - "8333:8333  "
+      - "8333:8333"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/doge_data:/dogecoin/data
