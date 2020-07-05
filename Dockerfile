@@ -1,4 +1,3 @@
-GNU nano 4.2                                                                                                                                                                                                                                                     Dockerfile
 FROM debian:buster
 
 ARG VERSION
