@@ -1,78 +1,50 @@
-FROM alpine:3.8 as builder
+GNU nano 4.2                                                                                                                                                                                                                                                     Dockerfile
+FROM debian:buster
 
-ENV DOGECOIN_ROOT=/dogecoin
-ENV BDB_PREFIX="${DOGECOIN_ROOT}/db4" DOGECOIN_REPO="${DOGECOIN_ROOT}/repo" PATH="${DOGECOIN_ROOT}/bin:$PATH" DOGECOIN_DATA="${DOGECOIN_ROOT}/data"
+ARG VERSION
 
-RUN mkdir -p $DOGECOIN_ROOT && mkdir -p $BDB_PREFIX
+ENV USER_ID ${USER_ID:-1000}
+ENV GROUP_ID ${GROUP_ID:-1000}
+
+RUN groupadd -g ${GROUP_ID} dogecoin \
+      && useradd -u ${USER_ID} -g dogecoin -s /bin/bash -m -d /dogecoin dogecoin
+
+RUN apt-get update && apt-get -y upgrade && apt-get install -y wget ca-certificates gpg && \
+  apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY checksum.sha256 /root
+
+RUN set -x && \
+      cd /root && \
+  wget -q https://github.com/dogecoin/dogecoin/releases/download/{VERSION}/dogecoin-{VERSION}-x86_64-linux-gnu.tar.gz && \
+      cat checksum.sha256 | grep ${VERSION} | sha256sum -c  && \
+  tar xvf dogecoin-${VERSION}-x86_64-linux-gnu.tar.gz && \
+  cd dogecoin-${VERSION} && \
+  mv bin/* /usr/bin/ && \
+  mv lib/* /usr/bin/ && \
+  mv include/* /usr/bin/ && \
+  mv share/* /usr/bin/ && \
+  cd /root && \
+  rm -Rf dogecoin-${VERSION} dogecoin-${VERSION}-x86_64-linux-gnu.tar.gz
+
+ENV GOSU_VERSION 1.7
+RUN set -x \
+      && apt-get install -y --no-install-recommends \
+              ca-certificates \
+      && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture)" \
+      && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" \
+      && export GNUPGHOME="$(mktemp -d)" \
+      && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+      && gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
+      && rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
+      && chmod +x /usr/local/bin/gosu \
+      && gosu nobody true
+
+
+VOLUME ["/dogecoin"]
+EXPOSE  8333 18333 22556 44556
 
 WORKDIR /dogecoin
 
-RUN apk update && \
-    apk upgrade && \
-    apk add --no-cache libressl boost libevent libtool libzmq boost-dev libressl-dev libevent-dev zeromq-dev
-
-RUN apk add --no-cache git autoconf automake g++ make file
-
-RUN git clone https://github.com/dogecoin/dogecoin.git $DOGECOIN_REPO
-RUN cd $DOGECOIN_REPO && git checkout tags/v1.14.2 && cd ..
-
-RUN  wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz' && \
-    echo '12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz' | sha256sum -c
-
-RUN tar -xzf db-4.8.30.NC.tar.gz
-RUN cd db-4.8.30.NC/build_unix/ && \
-    ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX && \
-    make -j4 && \
-    make install
-RUN cd $DOGECOIN_REPO && \
-    ./autogen.sh && \
-    ./configure \
-        LDFLAGS="-L${BDB_PREFIX}/lib/" \
-        CPPFLAGS="-I${BDB_PREFIX}/include/" \
-        --disable-tests \
-        --disable-bench \
-        --disable-ccache \
-        --with-gui=no \
-        --with-utils \
-        --with-libs \
-        --with-daemon \
-        --prefix=$DOGECOIN_ROOT && \
-    make -j4 && \
-    make install && \
-    rm -rf $DOGECOIN_ROOT/db-4.8.30.NC* && \
-    rm -rf $BDB_PREFIX/docs && \
-    rm -rf $DOGECOIN_REPO && \
-    strip $DOGECOIN_ROOT/bin/dogecoin-cli && \
-    strip $DOGECOIN_ROOT/bin/dogecoin-tx && \
-    strip $DOGECOIN_ROOT/bin/dogecoind && \
-    strip $DOGECOIN_ROOT/lib/libdogecoinconsensus.a && \
-    strip $DOGECOIN_ROOT/lib/libdogecoinconsensus.so.0.0.0 && \
-    apk del git autoconf automake g++ make file
-
-FROM alpine:3.8
-
-LABEL maintainer="Harold Whistler <harold.whistler@nutshell.exchange>"
-
-ENV DOGECOIN_ROOT=/dogecoin
-ENV DOGECOIN_DATA="${DOGECOIN_ROOT}/data" PATH="${DOGECOIN_ROOT}/bin:$PATH"
-
-RUN apk update && \
-    apk upgrade && \
-    apk add --no-cache libressl boost libevent libtool libzmq
-
-COPY --from=builder ${DOGECOIN_ROOT}/bin ${DOGECOIN_ROOT}/bin
-COPY --from=builder ${DOGECOIN_ROOT}/lib ${DOGECOIN_ROOT}/lib
-COPY --from=builder ${DOGECOIN_ROOT}/include ${DOGECOIN_ROOT}/include
-
-WORKDIR ${DOGECOIN_DATA}
-VOLUME ["${DOGECOIN_DATA}"]
-
-COPY docker-entrypoint.sh /entrypoint.sh
-
-RUN chmod u+x /entrypoint.sh
-
-EXPOSE 8332 8333 18332 18333 18444
-
-ENTRYPOINT ["/entrypoint.sh"]
-
-CMD ["dogecoind"]
+COPY scripts/docker-entrypoint.sh /usr/local/bin/
+ENTRYPOINT ["docker-entrypoint.sh"]
