@@ -15,7 +15,7 @@ COPY checksum.sha256 /root
 
 RUN set -x && \
       cd /root && \
-  wget -q https://github.com/dogecoin/dogecoin/releases/download/{VERSION}/dogecoin-{VERSION}-x86_64-linux-gnu.tar.gz && \
+  wget -q https://github.com/dogecoin/dogecoin/releases/download/v${VERSION}/dogecoin-${VERSION}-x86_64-linux-gnu.tar.gz && \
       cat checksum.sha256 | grep ${VERSION} | sha256sum -c  && \
   tar xvf dogecoin-${VERSION}-x86_64-linux-gnu.tar.gz && \
   cd dogecoin-${VERSION} && \
