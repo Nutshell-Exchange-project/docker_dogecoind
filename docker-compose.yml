@@ -3,7 +3,7 @@ version: '3.6'
 services:
   dogecoin:
     restart: always
-    image: realnuts/docker_dogecoind:v2.1.14.2
+    image: realnuts/docker_dogecoind:v3.1.14.2
     ports:
       - "8332:8332"
       - "8333:8333"
