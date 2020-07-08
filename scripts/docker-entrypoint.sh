@@ -1,25 +1,10 @@
-#!/bin/bash
+
+#!/bin/sh
 set -e
-
-if [[ $(echo "$1" | cut -c1) = "-" ]]; then
-  echo "$0: assuming arguments for dogecoind"
-
-  set -- dogecoind "$@"
+# allow the container to be started with `--user`
+if [ "$(id -u)" = '0' ]; then
+	chown -R dogecoin .
+	exec gosu dogecoin "$0" "$@"
 fi
 
-if [[ $(echo "$1" | cut -c1) = "-" ]] || [[ "$1" = "dogecoind" ]]; then
-  mkdir -p "$DOGECOIN_DATA"
-  chmod 700 "$DOGECOIN_DATA"
-
-  echo "$0: setting data directory to $DOGECOIN_DATA"
-
-  set -- "$@" -datadir="$DOGECOIN_DATA"
-fi
-
-if [[ "$1" = "dogecoind" ]] || [[ "$1" = "dogecoin-cli" ]] || [[ "$1" = "dogecoin-tx" ]]; then
-  echo
-  exec "$@"
-fi
-
-echo
 exec "$@"

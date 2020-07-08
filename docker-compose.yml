@@ -3,7 +3,7 @@ version: '3.6'
 services:
   dogecoin:
     restart: always
-    image: realnuts/docker_dogecoind:v3.1.14.2
+    image: realnuts/docker_dogecoind:1.14.2-0
     ports:
       - "8332:8332"
       - "8333:8333"
@@ -14,10 +14,11 @@ services:
        - "-printtoconsole"
        - "-regtest=0"
        - "-rest"
+       - "-txindex"
        - "-rpcallowip=0/32"
        - "-rpcallowip=172.17.0.0/16"
        - "-rpcpassword=test"
-       - "-wallet=wallet1"
+       - "-wallet=main"
        - "-rpcport=8333"
        - "-rpcuser=foo"
        - "-server"
