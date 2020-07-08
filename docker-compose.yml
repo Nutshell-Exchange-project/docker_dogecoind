@@ -12,7 +12,7 @@ services:
     volumes:
       - /opt/dogecoin/keys/mainnet:/dogecoin/wallet
       - /opt/dogecoin/blocks/mainnet:/dogecoin/.dogecoin/blocks
-      - /opt/dogecoin/config/mainnet-dogecoin.conf:/dogecoin/.dogecoin/dogecoin.conf
+      - /opt/dogecoin/config/mainnet-bitcoin.conf:/dogecoin/.dogecoin/dogecoin.conf
 
   testnet:
     image: realnuts/docker_dogecoind:1.14.2-0
