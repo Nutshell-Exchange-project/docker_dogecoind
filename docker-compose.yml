@@ -10,7 +10,7 @@ services:
       - "8332:8332"
       - "8333:8333"
     volumes:
-      - /opt/dogecoin/keys/mainnet:/dogecoin/wallet
+      - /opt/dogecoin/keys/mainnet:/dogecoin/.dogecoin/wallet
       - /opt/dogecoin/blocks/mainnet:/dogecoin/.dogecoin/blocks
       - ./config/mainnet-dogecoin.conf:/dogecoin/.dogecoin/dogecoin.conf
 
