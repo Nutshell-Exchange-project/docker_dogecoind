@@ -1,24 +1,55 @@
-# docker_doged
-Doge Coin [DOGE] docker image source with Docker Composer file attached
+# Bitcoind
 
-If you need other than 1.14.2 linux x64 version, you need to replace version number in build command:
+## Start the cryptonode
 
-
-```
-docker build --build-arg VERSION=2.7.2 -t realnuts/docker_dogecoind:tagname .
+```shell
+docker-compose up -Vd *mainnet or testnet*`
 ```
 
-###
-**IMPORTANT**
-You need to replace SHA256 archive checksum if you replace version number in `checksum.sha256` file or your build will be failed.
+## Usage
+### Create a new account
 
-You can obtain actual checksum by linux command on downloaded wallet archive:
+```shell
+curl -H "Content-Type: application/json" --data '{"method": "getnewaddress"}' rpcuser:rpcpassword@ip:port
 ```
-sha256sum dogecoin-1.14.2-x86_64-linux-gnu.tar.gz
+Or, you can specify account and get this address assigned to new address
+
+```shell
+curl -H "Content-Type: application/json" --data '{"method": "getnewaddress", "params": ["billy"]}' rpcuser:rpcpassword@ip:port
 ```
 
-Result of this command will looks like this:
+Where 'billy' is your account name. You can check that your account was created properly:
+
+```shell
+curl -H "Content-Type: application/json" --data '{"method": "getaddressesbyaccount", "params": ["billy"]}' rpcuser:rpcpassword@ip:port
 ```
-10c400c8f2039b1f804b8a533266201a9e4e3b32a8854501e8a43792e1ee78e6  dogecoin-1.14.2-x86_64-linux-gnu.tar.gz
+
+### General Blockchain info
+
+``` shell
+curl -H "Content-Type: application/json" --data '{"method": "getinfo"}' rpcuser:rpcpassword@ip:port
 ```
-Replace first block of this string in `checksum.sha256` file and save it.
+
+### Account info
+
+To get account by address:
+
+```shell
+curl -H "Content-Type: application/json" --data '{"method": "getaccount", "params": ["bchtest:qpkgrpazps220qtnzvlvlcm62urtnq0edv7ufjr95n"]}' rpcuser:rpcpassword@ip:port
+```
+
+To get addresses associated with account:
+
+```shell
+curl -H "Content-Type: application/json" --data '{"method": "getaddressesbyaccount", "params": ["billy"]}' rpcuser:rpcpassword@ip:port
+```
+
+To get account balance:
+
+```shell
+curl -H "Content-Type: application/json" --data '{"method": "getbalance", "params": ["billy"]}' rpcuser:rpcpassword@ip:port
+```
+
+More:
+
+[Bitcoin RPC API](https://en.bitcoin.it/wiki/Original_Bitcoin_client/API_calls_list)
