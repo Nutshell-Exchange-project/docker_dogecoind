@@ -25,4 +25,4 @@ services:
     volumes:
       - /opt/dogecoin/keys/testnet:/dogecoin/wallet
       - /opt/dogecoin/blocks/testnet:/dogecoin/.dogecoin/testnet3/blocks
-      - /opt/dogecoin/config/testnet-dogecoin.conf:/dogecoin/.dogecoin/bitcoin.conf
+      - /opt/dogecoin/config/testnet-dogecoin.conf:/dogecoin/.dogecoin/dogecoin.conf
