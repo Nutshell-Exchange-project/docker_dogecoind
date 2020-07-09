@@ -77,7 +77,7 @@ RUN set -x \
 	&& gosu nobody true
 
 
-VOLUME ["/dogecoin"]
+VOLUME ["/home/dogecoin/.dogecoin"]
 EXPOSE 8332 8333 18332 18333
 
 WORKDIR /dogecoin
