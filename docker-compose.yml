@@ -2,7 +2,7 @@ version: '3.6'
 
 services:
   mainnet:
-    image: realnuts/docker_dogecoind:1.14.2-1
+    image: realnuts/docker_dogecoind:1.14.2-2
     restart: always
     user: root
     command: dogecoind
@@ -14,7 +14,7 @@ services:
       - ./config/mainnet-dogecoin.conf:/home/dogecoin/.dogecoin/dogecoin.conf
 
   testnet:
-    image: realnuts/docker_dogecoind:1.14.2-1
+    image: realnuts/docker_dogecoind:1.14.2-2
     restart: always
     user: root
     command: dogecoind
