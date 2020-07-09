@@ -78,6 +78,7 @@ RUN set -x \
 
 
 VOLUME ["/home/dogecoin/.dogecoin"]
+WORKDIR /home/dogecoin
 EXPOSE 8332 8333 18332 18333
 
 COPY scripts/docker-entrypoint.sh /usr/local/bin/
