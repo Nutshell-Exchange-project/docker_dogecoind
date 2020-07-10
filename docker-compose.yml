@@ -2,25 +2,13 @@ version: '3.6'
 
 services:
   mainnet:
-    image: realnuts/docker_dogecoind:1.14.2-3
+    image: realnuts/docker_dogecoind:0.14.2-4
     restart: always
     user: root
     command: dogecoind
     ports:
-      - "8332:8332"
-      - "8333:8333"
+      - "22555:22555"
+      - "22556:22556"
     volumes:
-      - /opt/blockchain_data/dogecoin/mainnet:/home/dogecoin/.dogecoin
-      - ./config/mainnet-dogecoin.conf:/home/dogecoin/.dogecoin/dogecoin.conf
-
-  testnet:
-    image: realnuts/docker_dogecoind:1.14.2-3
-    restart: always
-    user: root
-    command: dogecoind
-    ports:
-      - "18332:18332"
-      - "18333:18333"
-    volumes:
-      - /opt/blockchain_data/dogecoin/testnet:/home/dogecoin/.dogecoin
-      - ./config/testnet-dogecoin.conf:/home/dogecoin/.dogecoin/dogecoin.conf
+      - /opt/blockchain_data/dogecoin:/home/dogecoin/.dogecoin/
+      - ./config/mainnet.conf:/home/dogecoin/.dogecoin/dogecoin.conf

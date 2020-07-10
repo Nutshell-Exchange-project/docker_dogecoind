@@ -4,82 +4,46 @@ ARG VERSION
 
 ENV USER_ID ${USER_ID:-1000}
 ENV GROUP_ID ${GROUP_ID:-1000}
+ENV DOGECOIN_DATA=/home/dogecoin/.dogecoin
 
 RUN groupadd -g ${GROUP_ID} dogecoin \
 	&& useradd -u ${USER_ID} -g dogecoin -s /bin/bash -m -d /dogecoin dogecoin
-	# Install required system packages
-	RUN apt-get update && apt-get install -y \
-	    automake \
-	    bsdmainutils \
-	    curl \
-	    g++ \
-	    libboost-all-dev \
-	    libevent-dev \
-	    libssl-dev \
-	    libtool \
-	    libzmq3-dev \
-	    make \
-	    openjdk-8-jdk \
-	    pkg-config \
-	    zlib1g-dev \
-			apt-utils
 
-	# Install Berkeley DB 4.8
-	RUN curl -L http://download.oracle.com/berkeley-db/db-4.8.30.tar.gz | tar -xz -C /tmp && \
-	    cd /tmp/db-4.8.30/build_unix && \
-	    ../dist/configure --enable-cxx --includedir=/usr/include/bdb4.8 --libdir=/usr/lib && \
-	    make -j$(nproc) && make install && \
-	    cd / && rm -rf /tmp/db-4.8.30
+RUN apt-get update -y
 
-	# Install minizip from source (unavailable from apt on Ubuntu 14.04)
-	RUN curl -L https://www.zlib.net/zlib-1.2.11.tar.gz | tar -xz -C /tmp && \
-	    cd /tmp/zlib-1.2.11/contrib/minizip && \
-	    autoreconf -fi && \
-	    ./configure --enable-shared=no --with-pic && \
-	    make -j$(nproc) install && \
-	    cd / && rm -rf /tmp/zlib-1.2.11
+RUN apt-get upgrade -y
 
-	# Install zmq from source (outdated version from apt on Ubuntu 14.04)
-	RUN curl -L https://github.com/zeromq/libzmq/releases/download/v4.3.1/zeromq-4.3.1.tar.gz | tar -xz -C /tmp && \
-	    cd /tmp/zeromq-4.3.1/ && ./configure --disable-shared --without-libsodium --with-pic && \
-	    make -j$(nproc) install && \
-	    cd / && rm -rf /tmp/zeromq-4.3.1/
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
-RUN apt-get update && apt-get -y upgrade && apt-get install -y wget ca-certificates gpg && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get install -y dialog apt-utils git curl nano wget
 
-COPY checksum.sha256 /root
+RUN curl -o /usr/local/bin/gosu -L https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-$(dpkg --print-architecture) \
+&& chmod +x /usr/local/bin/gosu
 
-RUN set -x && \
-	cd /root && \
-    wget -q https://github.com/dogecoin/dogecoin/releases/download/v${VERSION}/dogecoin-${VERSION}-x86_64-linux-gnu.tar.gz && \
-	cat checksum.sha256 | grep ${VERSION} | sha256sum -c  && \
-    tar xvf dogecoin-${VERSION}-x86_64-linux-gnu.tar.gz && \
-    cd dogecoin-${VERSION} && \
-    mv bin/* /usr/bin/ && \
-    mv lib/* /usr/bin/ && \
-    mv include/* /usr/bin/ && \
-    mv share/* /usr/bin/ && \
-    cd /root && \
-    rm -Rf dogecoin-${VERSION} dogecoin-${VERSION}-x86_64-linux-gnu.tar.gz
+RUN apt-get install -y -q build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils default-jdk default-jre
 
-ENV GOSU_VERSION 1.7
-RUN set -x \
-	&& apt-get install -y --no-install-recommends \
-		ca-certificates \
-	&& wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture)" \
-	&& wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" \
-	&& export GNUPGHOME="$(mktemp -d)" \
-	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
-	&& gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
-	&& rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
-	&& chmod +x /usr/local/bin/gosu \
-	&& gosu nobody true
+RUN apt-get install -y libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
 
+RUN wget http://mirrors.kernel.org/ubuntu/pool/universe/d/db/libdb5.1_5.1.29-7ubuntu1_amd64.deb && wget http://mirrors.kernel.org/ubuntu/pool/universe/d/db/libdb5.1++_5.1.29-7ubuntu1_amd64.deb && dpkg -i libdb5.1*.deb
+
+RUN wget http://mirrors.kernel.org/ubuntu/pool/universe/d/db/libdb5.1-dev_5.1.29-7ubuntu1_amd64.deb && wget http://mirrors.kernel.org/ubuntu/pool/universe/d/db/libdb5.1++-dev_5.1.29-7ubuntu1_amd64.deb && dpkg -i libdb5.1*-dev*.deb
+
+RUN apt-get install -y libminiupnpc-dev
+
+RUN apt-get install -y libzmq3-dev
+
+RUN cd /tmp && git clone https://github.com/dogecoin/dogecoin.git && cd ./dogecoin && git checkout tags/v1.14.2
+
+RUN cd /tmp/dogecoin && ./autogen.sh && ./configure --without-gui && make && make install
+
+RUN rm -rf ./dogecoin
+
+EXPOSE 22555 22556
 
 VOLUME ["/home/dogecoin/.dogecoin"]
-WORKDIR /home/dogecoin
-EXPOSE 8332 8333 18332 18333
 
-COPY scripts/docker-entrypoint.sh /usr/local/bin/
+COPY docker-entrypoint.sh /usr/local/bin/
+
 ENTRYPOINT ["docker-entrypoint.sh"]
+
+CMD ["dogecoind"]
